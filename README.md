@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Haven Chandigarh Parent Emails
 
-## Getting Started
+Secure parent-contact management and individual Gmail delivery for Haven Chandigarh Parent Check-In calls. Admin APIs use a signed HTTP-only session. Every attempt is logged and successful call-recipient pairs are idempotent.
 
-First, run the development server:
+## Local setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Copy `.env.example` to `.env.local`, fill in its placeholders, then run `npm install`, `npx prisma migrate dev --name init`, `npx prisma generate`, and `npm run dev`. Visit `/admin` and sign in with `ADMIN_SECRET`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Required: `DATABASE_URL`, `ADMIN_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, and `GOOGLE_REFRESH_TOKEN`. Add `NEXT_PUBLIC_APP_URL`, `LUMA_WEBHOOK_SECRET`, and `CRON_SECRET` for production integrations.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Google Gmail
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Enable Gmail API in Google Cloud, authorize `https://www.googleapis.com/auth/gmail.send`, and add `http://localhost:3000/api/auth/google/callback` locally or `${NEXT_PUBLIC_APP_URL}/api/auth/google/callback` in production. Use the Workspace sender `chandigarh@haven.hackclub.com`. Store the resulting refresh token only in the deployment environment; this app never logs it or exposes it in an API response.
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+Create the active call using `POST /api/admin/parent-call`, manage contacts through `/api/admin/parents`, preview at `/admin/preview`, and send one test using `POST /api/email/test`. Bulk send requires `{ "confirm": true }` at `POST /api/admin/send-parent-checkin`. Every parent is sent separately and never sees other recipient addresses.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Luma and Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Set Luma's URL to `${NEXT_PUBLIC_APP_URL}/api/webhooks/luma`. It verifies `x-luma-signature` as an HMAC-SHA256 hex signature of the raw body and only stores a verified parent email; it never emails participants automatically. Confirm Luma's actual payload/header and adapt `lib/luma/parser.ts` before enabling production delivery.
 
-## Deploy on Vercel
+Add all `.env.example` values to Vercel and migrate the production database. `vercel.json` calls the cron every Monday at 09:00 UTC; adjust the schedule. Vercel supplies `CRON_SECRET` through its authorization header. The endpoint is repeat-safe.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` before deployment.

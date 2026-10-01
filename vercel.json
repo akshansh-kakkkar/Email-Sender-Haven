@@ -1,0 +1,1 @@
+{ "crons": [{ "path": "/api/cron/parent-checkin", "schedule": "0 9 * * 1" }] }

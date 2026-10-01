@@ -1,0 +1,8 @@
+export type ParentCallEmailData = { date: string; time: string; timezone: string; lumaLink: string; title: string };
+export function parentCheckinEmail(call: ParentCallEmailData) {
+  const subject = call.title || "Haven Chandigarh — Parent Check-In Call";
+  const text = `Hi everyone!\n\nWe know that a lot of parents may hesitate before sending their child to an event like Haven, especially when it involves staying overnight.\n\nThat’s completely understandable, so we’re hosting a short Parent Check-In Call where you can meet the organizers, understand how the event will work, and ask us anything you’re concerned about.\n\n📅 Date: ${call.date}\n⏰ Time: ${call.time} (${call.timezone})\n🔗 Join here: ${call.lumaLink}\n\nWe’d really encourage parents to join, even if you just want to listen in.\n\nSee you there!\n\n— Akshansh\nHaven Chandigarh`;
+  const html = `<p>Hi everyone!</p><p>We know that a lot of parents may hesitate before sending their child to an event like Haven, especially when it involves staying overnight.</p><p>That’s completely understandable, so we’re hosting a short Parent Check-In Call where you can meet the organizers, understand how the event will work, and ask us anything you’re concerned about.</p><p>📅 <strong>Date:</strong> ${escapeHtml(call.date)}<br>⏰ <strong>Time:</strong> ${escapeHtml(call.time)} (${escapeHtml(call.timezone)})<br>🔗 <a href="${escapeHtml(call.lumaLink)}">Join here</a></p><p>We’d really encourage parents to join, even if you just want to listen in.</p><p>See you there!</p><p>— Akshansh<br>Haven Chandigarh</p>`;
+  return { subject, text, html };
+}
+function escapeHtml(value: string) { return value.replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c); }

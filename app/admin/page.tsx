@@ -1,0 +1,1 @@
+import{cookies}from"next/headers";import{redirect}from"next/navigation";import Dashboard from"./dashboard";export default async function Admin(){const c=await cookies();if(!c.get("haven_admin_session"))redirect("/admin/login");return <Dashboard csrf={c.get("haven_admin_csrf")?.value??""}/>}

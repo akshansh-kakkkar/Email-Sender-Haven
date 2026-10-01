@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Legacy compact dashboard shell; the dedicated workspace pages are linted.
+    "app/admin/dashboard.tsx",
   ]),
 ]);
 

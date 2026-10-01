@@ -1,0 +1,10 @@
+import { EmailTemplate, EventSettings, ParentCall, ParentContact } from "@prisma/client";
+export const defaultParentCheckin = { name:"Parent Check-In", type:"PARENT_CHECKIN", subject:"{{event_name}} — Parent Check-In Call", greeting:"Hi {{parent_name}}!", body:"We know parents may have questions before their child attends an overnight event. We’re hosting a short Parent Check-In Call where you can meet the organizers, understand how the event works, and ask anything you’re concerned about.", dateText:"📅 Date: {{date}}", timeText:"⏰ Time: {{time}} ({{timezone}})", linkText:"🔗 Join here: {{meeting_link}}", closing:"We’d really encourage parents to join, even if you just want to listen in.", signature:"— {{organizer_name}}\n{{event_name}}" };
+export const templateVariables=["parent_name","participant_name","date","time","timezone","meeting_link","event_name","event_location","organizer_name"];
+export function renderTemplate(template: Pick<EmailTemplate,"subject"|"greeting"|"body"|"dateText"|"timeText"|"linkText"|"closing"|"signature">, call: ParentCall, settings: EventSettings, parent?: ParentContact) {
+ const values:Record<string,string>={parent_name:parent?.name||"Parent",participant_name:parent?.participantName||"your child",date:call.date,time:call.time,timezone:call.timezone,meeting_link:call.lumaLink,event_name:settings.eventName,event_location:settings.eventLocation,organizer_name:settings.organizerName};
+ const fill=(s:string)=>s.replace(/{{\s*([a-z_]+)\s*}}/g,(_,k)=>values[k]??""); const pieces=[template.greeting,template.body,template.dateText,template.timeText,template.linkText,template.closing,template.signature].filter(Boolean).map(fill);
+ const text=pieces.join("\n\n").replace(/\*\*(.+?)\*\*/g,"$1"),subject=fill(template.subject).replace(/\*\*(.+?)\*\*/g,"$1"); const html=pieces.map(p=>`<p>${formatEmailText(p)}</p>`).join(""); return {subject,text,html};
+}
+function escapeHtml(s:string){return s.replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]||c));}
+function formatEmailText(s:string){return escapeHtml(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>");}

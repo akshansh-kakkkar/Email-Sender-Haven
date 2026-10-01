@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmailType {
+  PARENT_CHECKIN
+  REGISTRATION
+  TEST
+  OTHER
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+}
+
+model ParentContact {
+  id                 String   @id @default(cuid())
+  name               String?
+  email              String   @unique
+  participantName    String?
+  participantId      String?
+  source             String   @default("MANUAL")
+  lumaRegistrationId String?  @unique
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model ParentCall {
+  id        String     @id @default(cuid())
+  date      String
+  time      String
+  timezone  String     @default("Asia/Kolkata")
+  lumaLink  String
+  title     String     @default("Haven Chandigarh — Parent Check-In Call")
+  description String?
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  emailLogs EmailLog[]
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("OTHER")
+  subject   String
+  greeting  String   @default("")
+  body      String
+  dateText  String   @default("📅 Date: {{date}}")
+  timeText  String   @default("⏰ Time: {{time}} ({{timezone}})")
+  linkText  String   @default("🔗 Join here: {{meeting_link}}")
+  closing   String   @default("")
+  signature String   @default("")
+  isActive  Boolean  @default(true)
+  isArchived Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([type, isActive, isArchived])
+}
+
+model EventSettings {
+  id                    String   @id @default(cuid())
+  eventName             String   @default("Haven Chandigarh")
+  eventLocation         String   @default("Chandigarh")
+  eventDate             String?
+  eventWebsite          String?
+  organizerName         String   @default("Akshansh")
+  organizerEmail        String   @default("chandigarh@haven.hackclub.com")
+  organizerOrganization String?
+  supportEmail          String?
+  logoUrl               String?
+  accentColor           String   @default("#f97316")
+  emailSignature        String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model EmailLog {
+  id           String      @id @default(cuid())
+  recipient    String
+  subject      String
+  type         EmailType
+  status       EmailStatus
+  messageId    String?
+  error        String?
+  parentCallId String?
+  parentCall   ParentCall? @relation(fields: [parentCallId], references: [id], onDelete: SetNull)
+  sentAt       DateTime?
+  createdAt    DateTime    @default(now())
+  @@index([recipient, parentCallId, type, status])
+  @@index([createdAt])
+}
